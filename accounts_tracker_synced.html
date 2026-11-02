@@ -44,7 +44,7 @@ const def=()=>({s:{name:'Kali Pujo',year:2026,flat:1800},
 let S=null;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}S=S||def();
 let view='sum',armed=false;
 /* ===== PASTE YOUR APPS SCRIPT WEB APP URL BETWEEN THE QUOTES ===== */
-const API_URL='https://script.google.com/macros/s/AKfycbxfseu92087tRZahtPVw0pcELfCxsBKbbKQueaohaKlTI4n8nP9aOmAdcbbNen6gzGkIQ/exec';
+const API_URL='https://script.google.com/macros/s/AKfycbxCGJXMtFBF56HTZw7KSgLhrEJ4jnKVt6Bf34p0ZpwD-k2O_rlcvzBnf-ufCLfG8PcN6A/exec';
 const SYNC=API_URL.startsWith('https://');
 let pass='';try{pass=localStorage.getItem(K+'-pass')||''}catch(e){}
 let rev=0,pending=false,timer=null,locked=SYNC&&!pass;
