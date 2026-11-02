@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Kali Pujo Accounts Tracker</title>
+<style>
+:root{--bg:#f4f6fa;--card:#fff;--tx:#1b2430;--mu:#5f6b7a;--bd:#d6dce5;--pri:#1f4e78;--ok:#2e7d32;--bad:#c62828;--warn:#b26a00;--in:#eef3fb;color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#11161d;--card:#1a212b;--tx:#e8edf3;--mu:#9aa7b6;--bd:#2c3644;--pri:#7fb2e5;--ok:#7bd17f;--bad:#ff8a80;--warn:#ffc266;--in:#222c39;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#11161d;--card:#1a212b;--tx:#e8edf3;--mu:#9aa7b6;--bd:#2c3644;--pri:#7fb2e5;--ok:#7bd17f;--bad:#ff8a80;--warn:#ffc266;--in:#222c39;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif}
+header{padding:14px 14px 4px}h1{margin:0;font-size:20px;color:var(--pri)}header p{margin:2px 0 0;color:var(--mu);font-size:12px}
+nav{display:flex;gap:6px;padding:8px 14px;position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5}
+nav button{flex:1;padding:9px 4px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;font:inherit;font-weight:600}
+nav button.on{background:var(--pri);color:var(--bg);border-color:var(--pri)}
+main{padding:0 14px 30px;max-width:1100px;margin:auto}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px;margin-bottom:12px}
+.card h2{margin:0 0 8px;font-size:14px;color:var(--pri);text-transform:uppercase;letter-spacing:.04em}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.kpi{border:1px solid var(--bd);border-radius:8px;padding:8px}.kpi small{color:var(--mu);display:block;font-size:11px}.kpi b{font-size:18px}
+.neg{color:var(--bad)}.pos{color:var(--ok)}.warn{color:var(--warn)}
+.msg{margin-top:8px;font-weight:600}
+.w{overflow-x:auto}table{border-collapse:collapse;width:100%;min-width:560px}
+th{background:var(--pri);color:var(--bg);padding:6px;font-size:12px;text-align:left;white-space:nowrap}
+td{border-bottom:1px solid var(--bd);padding:3px 4px;white-space:nowrap}td.n{text-align:right}
+input,select{font:inherit;color:var(--tx);background:var(--in);border:1px solid var(--bd);border-radius:6px;padding:5px;max-width:100%;box-sizing:border-box}
+input[type=number]{width:84px;text-align:right}input.t{width:130px}input.w2{width:96px}
+.btn{padding:8px 12px;border:1px solid var(--pri);background:var(--card);color:var(--pri);border-radius:8px;font:inherit;font-weight:600;margin:8px 6px 0 0}
+.x{border:0;background:none;color:var(--bad);font-size:18px;padding:0 6px}
+.tag{padding:2px 8px;border-radius:10px;font-size:12px;font-weight:600;border:1px solid var(--bd)}
+.s-ok{color:var(--ok)}.s-bad{color:var(--bad)}.s-warn{color:var(--warn)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px}.row label{font-size:12px;color:var(--mu);display:block}
+.row input{width:100%}.note{color:var(--mu);font-size:12px;margin:6px 0 0}
+</style></head><body>
+<header><h1 id="ttl"></h1><p id="st"></p></header>
+<nav id="nav"></nav><main id="app"></main>
+<script>
+const K='kali-tracker-v1';
+const NAMES=["Anirban","Sanjay Das","Avik Chowdhury","Subhasish Kaku","Reshmi Di","Kumar Da","Piyush Kaku","Samiran Da","Soumen Da","Ratan Da","Sanjib Saha","Sunirmal Guriya","Rahul (Ground floor)","Rahul Dey","Avik Ganguly"];
+const LAST=[["Pandal & Decoration",10585],["Groceries, Fruits & Bhog",6585],["Electrical & Lighting",5600],["Puja Items & Flowers",1928],["Rituals (Dosokorma/Dodhikorma)",1594],["Miscellaneous",1896],["Clothing",1010],["Cleaning & Utensils",806],["Bisorjon (Immersion)",415]];
+const def=()=>({s:{name:'Kali Pujo',year:2026,flat:1800},
+ cats:[...LAST.map(([n,l])=>({n,l,b:Math.ceil(l*1.1/50)*50})),{n:'Dhak (Drummers)',l:0,b:1000},{n:'Idol (Thakur)',l:0,b:5000},{n:'Priest (Thakurmasai)',l:0,b:3000}],
+ con:NAMES.map(n=>({n,f:'',due:'',paid:'',d:'',m:''})),
+ exp:[['Dhak','Dhak (Drummers)',1000],['Thakur (idol)','Idol (Thakur)',5000],['Thakurmasai (priest)','Priest (Thakurmasai)',3000]].map(([i,c,a])=>({d:'',i,c,a,by:'',from:'',r:''}))});
+let S=null;try{S=JSON.parse(localStorage.getItem(K))}catch(e){}S=S||def();
+let view='sum',armed=false;
+/* ===== PASTE YOUR APPS SCRIPT WEB APP URL BETWEEN THE QUOTES ===== */
+const API_URL='https://script.google.com/macros/s/AKfycbxBZzR8Oxy3cmqB-OftQ0aMsT8k6nTzFlHsRb2yxdpfIWBOauxUupwr1cEI6ghM8c5x/exec';
+const SYNC=API_URL.startsWith('https://');
+let pass='';try{pass=localStorage.getItem(K+'-pass')||''}catch(e){}
+let rev=0,pending=false,timer=null,locked=SYNC&&!pass;
+const LOCKHTML='<div class="card"><h2>Enter passcode</h2><input id="pc" type="password" class="t" placeholder="Passcode"> <button class="btn" data-act="unlock" style="margin:0">Open</button><p class="note">Ask the account manager for the passcode. It is remembered on this device.</p></div>';
+const setStatus=t=>{const el=document.getElementById('st');if(el)el.textContent=t};
+const local=()=>{try{localStorage.setItem(K,JSON.stringify(S))}catch(e){}};
+function save(){local();if(!SYNC)return;pending=true;setStatus('Saving…');clearTimeout(timer);timer=setTimeout(push,800)}
+const api=async b=>(await fetch(API_URL,{method:'POST',body:JSON.stringify({...b,pass})})).json();
+function lock(msg){locked=true;pass='';try{localStorage.removeItem(K+'-pass')}catch(e){}render();setStatus(msg||'')}
+async function push(){try{const j=await api({action:'save',data:S,baseRev:rev});
+ if(j.error==='auth')return lock('Wrong passcode');
+ if(j.conflict){S=j.data||S;rev=j.rev;pending=false;local();render();setStatus('Someone else updated the data, so it was reloaded. Please redo your last change.');return}
+ rev=j.rev;pending=false;setStatus('Saved ✓ '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}))}
+ catch(e){setStatus('Offline – will retry');timer=setTimeout(push,5000)}}
+async function pull(first){try{const j=await api({action:'get'});
+ if(j.error==='auth')return lock('Wrong passcode');
+ if(!j.data){rev=j.rev||0;if(first)push();return}
+ if(j.rev!==rev&&!pending){S=j.data;rev=j.rev;local();render()}
+ setStatus('Synced ✓')}catch(e){setStatus('Offline – showing the last saved copy')}}
+setInterval(()=>{const t=document.activeElement.tagName;if(SYNC&&!locked&&!pending&&t!=='INPUT'&&t!=='SELECT')pull()},30000);
+const N=v=>+v||0,fmt=n=>(n<0?'-':'')+'₹'+Math.round(Math.abs(n)).toLocaleString('en-IN');
+const esc=v=>String(v??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+const due=c=>c.due===''?N(S.s.flat):N(c.due);
+const sum=(a,f)=>a.reduce((t,x)=>t+f(x),0);
+function T(){const col=sum(S.con,c=>N(c.paid)),spent=sum(S.exp,e=>N(e.a)),owed=sum(S.exp,e=>e.from==='Own pocket'&&e.r!=='Yes'?N(e.a):0),
+ people=S.con.filter(c=>c.n),expd=sum(people,due),pend=sum(people,c=>Math.max(due(c)-N(c.paid),0)),bud=sum(S.cats,c=>N(c.b));
+ return{col,spent,owed,people,expd,pend,bud,paidN:people.filter(c=>N(c.paid)>0&&N(c.paid)>=due(c)).length}}
+const spentBy=n=>sum(S.exp,e=>e.c===n?N(e.a):0);
+const fld=(k,i,f,v,o={})=>`<input ${o.type==='n'?'type="number" inputmode="decimal"':o.type==='d'?'type="date"':`class="${o.cls||'t'}"`} value="${esc(v)}" data-k="${k}" data-i="${i}" data-f="${f}" ${o.ph?`placeholder="${o.ph}"`:''}>`;
+const sel=(k,i,f,v,opts)=>`<select data-k="${k}" data-i="${i}" data-f="${f}"><option value=""></option>${opts.map(o=>`<option${o===v?' selected':''}>${esc(o)}</option>`).join('')}</select>`;
+const stat=(c)=>{const p=N(c.paid),d=due(c);return p===0?['Not paid','s-bad']:p<d?['Partial','s-warn']:p>d?['Paid + extra','s-ok']:['Paid','s-ok']};
+function vSum(){const t=T(),bal=t.col-t.spent;
+ const gap=t.bud-t.expd,per=t.people.length?Math.ceil(t.bud/t.people.length):0;
+ const k=(l,v,c='')=>`<div class="kpi"><small>${l}</small><b class="${c}">${v}</b></div>`;
+ return`<div class="card"><h2>Key numbers</h2><div class="kpis">${k('Collected',fmt(t.col),'pos')}${k('Still to collect',fmt(t.pend))}${k('Spent',fmt(t.spent))}${k('Balance',fmt(bal),bal<0?'neg':'')}${k('Owed to members',fmt(t.owed),t.owed?'warn':'')}${k('Cash that should be in fund',fmt(bal+t.owed))}${k('Contributors paid',t.paidN+' of '+t.people.length)}${k('Expected income',fmt(t.expd))}${k('Total budget',fmt(t.bud))}</div>
+ <div class="msg ${gap>0?'neg':'pos'}">${gap>0?`Budget is ${fmt(gap)} more than expected income. About ${fmt(per)} per head would cover it.`:'Budget is covered by expected income.'}</div></div>
+ <div class="card"><h2>Settings</h2><div class="row"><div><label>Function name</label>${fld('s',0,'name',S.s.name,{cls:'t'})}</div><div><label>Year</label>${fld('s',0,'year',S.s.year,{type:'n'})}</div><div><label>Contribution per flat (₹)</label>${fld('s',0,'flat',S.s.flat,{type:'n'})}</div></div></div>
+ <div class="card"><h2>Spending by category</h2><div class="w"><table><tr><th>Category</th><th>Last year</th><th>Budget</th><th>Spent</th><th>Left</th><th>Status</th></tr>
+ ${S.cats.map((c,i)=>{const sp=spentBy(c.n),b=N(c.b),st=b===0?(sp>0?['No budget','s-bad']:['-','']):sp>b?['Over budget','s-bad']:sp>=.8*b?['Near limit','s-warn']:['OK','s-ok'];
+ return`<tr><td>${esc(c.n)}</td><td class="n">${fmt(N(c.l))}</td><td>${fld('cats',i,'b',c.b,{type:'n'})}</td><td class="n">${fmt(sp)}</td><td class="n ${b-sp<0?'neg':''}">${fmt(b-sp)}</td><td class="${st[1]}">${st[0]}</td></tr>`}).join('')}
+ <tr><td colspan="3"><b>Uncategorised</b></td><td class="n"><b>${fmt(t.spent-sum(S.cats,c=>spentBy(c.n)))}</b></td><td colspan="2"></td></tr></table></div>
+ <div style="margin-top:8px"><input id="nc" class="t" placeholder="New category name"> <button class="btn" data-act="addcat" style="margin:0">+ Add category</button></div>
+ <p class="note">Budgets start at last year’s spend + 10%. Type over any budget. New categories start at ₹0 budget.</p></div>
+ <button class="btn" data-act="reset">${armed?'Tap again to erase everything':'Reset to starting data'}</button>`}
+function vCon(){const t=T();
+ return`<div class="card"><h2>Contributions · ${fmt(t.col)} collected · ${fmt(t.pend)} pending</h2><div class="w"><table><tr><th>#</th><th>Name</th><th>Flat</th><th>Due ₹</th><th>Paid ₹</th><th>Date paid</th><th>Mode</th><th>Pending</th><th>Status</th><th></th></tr>
+ ${S.con.map((c,i)=>{const s=c.n?stat(c):['',''];return`<tr><td>${i+1}</td><td>${fld('con',i,'n',c.n)}</td><td>${fld('con',i,'f',c.f,{cls:'w2'})}</td><td>${fld('con',i,'due',c.due,{type:'n',ph:S.s.flat})}</td><td>${fld('con',i,'paid',c.paid,{type:'n'})}</td><td>${fld('con',i,'d',c.d,{type:'d'})}</td><td>${sel('con',i,'m',c.m,['Cash','UPI','Bank transfer','Cheque'])}</td><td class="n">${c.n?fmt(Math.max(due(c)-N(c.paid),0)):''}</td><td class="${s[1]}">${s[0]}</td><td><button class="x" data-del="con" data-i="${i}">×</button></td></tr>`}).join('')}</table></div>
+ <button class="btn" data-act="addcon">+ Add person</button><p class="note">Leave Due blank to use the per-flat amount. If someone pays in parts, enter the new total in Paid.</p></div>`}
+function vExp(){const t=T(),names=S.cats.map(c=>c.n);let run=0;
+ return`<div class="card"><h2>Expenses · ${fmt(t.spent)} spent · ${fmt(t.owed)} owed to members</h2><div class="w"><table><tr><th>Date</th><th>Item</th><th>Category</th><th>Amount ₹</th><th>Paid to / handled by</th><th>Paid from</th><th>Reimbursed?</th><th>Owed</th><th>Balance after</th><th></th></tr>
+ ${S.exp.map((e,i)=>{run+=N(e.a);const got=e.d?sum(S.con,c=>c.d&&c.d<=e.d?N(c.paid):0):t.col,own=e.from==='Own pocket'&&e.r!=='Yes'?N(e.a):0,b=got-run;
+ return`<tr><td>${fld('exp',i,'d',e.d,{type:'d'})}</td><td>${fld('exp',i,'i',e.i)}</td><td>${sel('exp',i,'c',e.c,names)}</td><td>${fld('exp',i,'a',e.a,{type:'n'})}</td><td>${fld('exp',i,'by',e.by,{cls:'w2'})}</td><td>${sel('exp',i,'from',e.from,['Fund','Own pocket'])}</td><td>${sel('exp',i,'r',e.r,['Yes','No','N/A'])}</td><td class="n ${own?'warn':''}">${own?fmt(own):'-'}</td><td class="n ${b<0?'neg':''}">${fmt(b)}</td><td><button class="x" data-del="exp" data-i="${i}">×</button></td></tr>`}).join('')}</table></div>
+ <button class="btn" data-act="addexp">+ Add expense</button><p class="note">“Balance after” = money collected up to that date − expenses so far. Add dates in order for it to be accurate. Choose Own pocket + Reimbursed? No to track what you owe a member.</p></div>`}
+function render(){document.getElementById('ttl').textContent=S.s.name+' '+S.s.year+' – Accounts';
+ if(locked){document.getElementById('nav').innerHTML='';document.getElementById('app').innerHTML=LOCKHTML;return}
+ document.getElementById('nav').innerHTML=[['sum','Summary'],['con','Contributions'],['exp','Expenses']].map(([k,l])=>`<button data-tab="${k}" class="${view===k?'on':''}">${l}</button>`).join('');
+ document.getElementById('app').innerHTML={sum:vSum,con:vCon,exp:vExp}[view]()}
+document.addEventListener('change',e=>{const d=e.target.dataset;if(!d.k)return;
+ const o=d.k==='s'?S.s:S[d.k][+d.i];o[d.f]=e.target.type==='number'&&e.target.value!==''&&!['due','paid'].includes(d.f)?+e.target.value:e.target.value;
+ if(d.k==='exp'&&d.f==='from'&&e.target.value==='Fund')o.r='N/A';save();render()});
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;const d=b.dataset;
+ if(d.tab){view=d.tab;armed=false}
+ else if(d.del){if(d.del==='con'||d.del==='exp')S[d.del].splice(+d.i,1)}
+ else if(d.act==='addcon')S.con.push({n:'',f:'',due:'',paid:'',d:'',m:''});
+ else if(d.act==='addexp')S.exp.push({d:new Date().toISOString().slice(0,10),i:'',c:'',a:'',by:'',from:'',r:''});
+ else if(d.act==='addcat'){const v=document.getElementById('nc').value.trim();if(v&&!S.cats.some(c=>c.n===v))S.cats.push({n:v,l:0,b:0})}
+ else if(d.act==='reset'){if(!armed){armed=true;render();return}S=def();armed=false}
+ else if(d.act==='unlock'){pass=document.getElementById('pc').value;try{localStorage.setItem(K+'-pass',pass)}catch(e){}locked=false;render();setStatus('Connecting…');pull(true);return}
+ else return;save();render()});
+render();setStatus(SYNC?(locked?'':'Connecting…'):'Sync is off: data is saved in this browser only.');if(SYNC&&!locked)pull(true);
+</script></body></html>
